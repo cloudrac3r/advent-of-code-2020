@@ -5,9 +5,9 @@ set target 2020
 for i in (seq 1 $lines)
     for j in (seq 1 $lines)
         for k in (seq 1 $lines)
-            set result (math $input[$i] + $input[$j] + $input[$k])
+            set result (math (string join + $input[$i $j $k]))
             if test $result -eq 2020
-                math $input[$i] \* $input[$j] \* $input[$k]
+                math (string join \* $input[$i $j $k])
                 exit
             else if test $result -gt 2020
                 break
