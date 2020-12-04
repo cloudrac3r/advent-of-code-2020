@@ -22,12 +22,12 @@ function check
             case eyr # expiry year
                 test $value -ge 2020 -a $value -le 2030
             case hgt # height
-                string match -q -r -- '^[0-9]+(?:cm|in)$' $value; or return
-                set -l number (string match -r -- '^[0-9]+' $value)
-                if string match -q -- '*cm' $value
-                    test $number -ge 150 -a $number -le 193
-                else
-                    test $number -ge 59 -a $number -le 76
+                set -l number (string match -r -- '^([0-9]+)(?:cm|in)$' $value)[2]; or return
+                switch $value
+                    case \*cm
+                        test $number -ge 150 -a $number -le 193
+                    case \*in
+                        test $number -ge 59 -a $number -le 76
                 end
             case hcl # hair color
                 string match -q -r -- '^#[0-9a-f]{6}$' $value
