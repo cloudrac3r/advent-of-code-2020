@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
 
-set input_file (string sub $argv[1] input.txt)[1]
+source ../lib.fish; or exit
 
 # Constants
 set my_bag shiny_gold
@@ -35,7 +35,7 @@ function parse_line
 
         # Output next bag, move on
         echo $words[$next] # number
-        string join _ $words[(math "$next + 1") (math "$next + 2")] | string replace , '' # type
+        string join _ $words[(seq_offset $next 1 1 2)] | string replace , '' # type
         set next (math "$next + 4")
     end
 end
@@ -60,9 +60,7 @@ function bag_contains_count
 
     # We haven't tested this bag yet, so recurse down all the inner bags.
     set -l sum 0
-    for i in (seq 1 2 (count $$test_bag))
-        set -l inner_quantity $contents[$i]
-        set -l inner_type $contents[(math "$i + 1")]
+    string sub $contents | while read -Ll inner_quantity inner_type
         # The inner bag's count, plus the inner bag itself (1), all multiplied by the number of times that bag is contained.
         set sum (math "$sum + ("(bag_contains_count $inner_type)" + 1) * $inner_quantity")
     end
