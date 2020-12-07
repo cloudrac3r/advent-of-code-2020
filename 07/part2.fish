@@ -28,14 +28,10 @@ function parse_line
 
     # Bags it contains
     set -l next 5
-    while true
-        # Test if there are more bags
-        set -l next_word $words[$next]
-        test "$next_word" != '' -a "$next_word" != 'no'; or return
-
-        # Output next bag, move on
+    while not contains "$words[$next]" '' no
+        # Output next inner bag
         echo $words[$next] # number
-        string join _ $words[(math_all $next+ 1 2)] | string replace , '' # type
+        string replace , '' (string join _ $words[(math_all $next+ 1 2)]) # type
         set next (math "$next + 4")
     end
 end
