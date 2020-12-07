@@ -35,7 +35,7 @@ function parse_line
 
         # Output next bag, move on
         echo $words[$next] # number
-        string join _ $words[(seq_offset $next 1 1 2)] | string replace , '' # type
+        string join _ $words[(math_all $next+ 1 2)] | string replace , '' # type
         set next (math "$next + 4")
     end
 end
