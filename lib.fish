@@ -43,3 +43,25 @@ function simple_disk_cache
         string sub -- $result
     end
 end
+
+# Loop over values, taking multiple values out, and getting values multiple times.
+# Example: Input: 2 a b c d
+#          Loop: a b; b c; c d
+function for_multi
+    set -l times $argv[1]
+    set -l values $argv[2..-1]
+
+    for s in (builtin_seq 1 1 (math (count $values) - $times + 1))
+        set -l e (math $s + $times - 1)
+        string sub -- $values[$s..$e]
+    end
+end
+
+# Do maths on a variable in-place.
+# Example input: "x + 1", would increment the variable x.
+function var_math -S
+    set -l name $argv[1]
+    set -l calculation $argv[2..-1]
+
+    set $name (math $$name $calculation)
+end
