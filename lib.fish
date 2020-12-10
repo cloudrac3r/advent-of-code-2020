@@ -27,3 +27,19 @@ function builtin_seq
         exit 1
     end
 end
+
+function simple_disk_cache
+    set -l dir cache
+    set -l file $argv[1]
+    set -l statement $argv[2]
+    mkdir -p $dir
+    if test -f $dir/$file
+        echo "sdc: using cached $file" >&2
+        cat $dir/$file
+    else
+        echo "sdc: generating result for $file" >&2
+        set result ($statement)
+        string sub -- $result > $dir/$file
+        string sub -- $result
+    end
+end
