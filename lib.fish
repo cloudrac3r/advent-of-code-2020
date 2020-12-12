@@ -65,3 +65,16 @@ function var_math -S
 
     set $name (math $$name $calculation)
 end
+
+function vector_math
+    set -l count $argv[1]
+    set -l operation $argv[2]
+    set -e argv[1 2]
+    set -l in1 $argv[1..$count]
+    set -e argv[1..$count]
+    set -l in2 $argv[1..$count]
+
+    for i in (builtin_seq 1 1 $count)
+        math "$in1[$i] $operation $in2[$i]"
+    end
+end
