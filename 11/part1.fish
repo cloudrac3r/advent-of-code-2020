@@ -25,9 +25,10 @@ function get_seat
     echo $seats[(get_seat_index $argv)]
 end
 
-# Get up to 8 seats that are next to to the seat targeted by coordinates.
+# Precompute the indexes of which (up to) 8 seats are next to to the seat
+# targeted by coordinates.
 # (If the seat is next to the edge of the grid, there will be fewer than 8.)
-function get_adjacent
+function compute_adjacent
     set -l x $argv[1]
     set -l y $argv[2]
 
@@ -42,10 +43,15 @@ function get_adjacent
 
     # Cartesian product x and y to get an (up to) 3x3 of grid coordinates
     # where seats may be
+    set -l index (get_seat_index $x $y)
+    set -l v seat_$index
     string sub $available_x\ $available_y | while read -l tx ty
         # Exclude the seat itself, the cartesian product creates it but we
         # don't actually want to check it.
-        test "$tx $ty" != "$x $y"; and get_seat $tx $ty
+        if test "$tx $ty" != "$x $y"
+            # Add the index of the adjacent seat to a global variable to look up later.
+            set -g -a $v (get_seat_index $tx $ty)
+        end
     end
 end
 
@@ -55,6 +61,15 @@ while read -l line
     set -a seats (string split '' $line)
     var_math seats_height + 1
 end < $input_file
+
+# Precompute adjacent seats
+echo "Computing adjacent seats..."
+time for y in (builtin_seq 1 1 $seats_height)
+    for x in (builtin_seq 1 1 $seats_width)
+        compute_adjacent $x $y
+    end
+end
+echo "Done computing, starting seat transforms."
 
 # Main loop.
 # We will keep transforming the seats from $seats to $next_seats, comparing them at the end.
@@ -72,28 +87,27 @@ while true
     set next_seats $seats
 
     # We'll time how long it takes to get to the next seat state.
-    # Somewhere around 50 iterations are needed.
-    # My computer takes about 30 seconds per iteration on the full data.
+    # 95 iterations are needed.
+    # My computer takes 6 to 4 seconds per iteration on the full data.
     time begin
         # We will check each seat on each row and each column
-        for y in (builtin_seq 1 1 $seats_height)
-            for x in (builtin_seq 1 1 $seats_width)
-                # Get the current seat
-                set -l seat (get_seat $x $y)
-                # Shortcut if it's floor, because floor never changes
-                test $seat = .; and continue
-                # Calculate the number of adjacent seats
-                # Yes, string match and count here appears to be faster than
-                # counting within the function and returning the count.
-                set -l full_adj (count (string match \# (get_adjacent $x $y)))
-                # Finally, transform the seat based on the data we collected.
-                if test $seat = \# -a $full_adj -ge 4
-                    # Crammed seat becomes empty
-                    set next_seats[(get_seat_index $x $y)] L
-                else if test $seat = L -a $full_adj -eq 0
-                    # Spacious seat fills
-                    set next_seats[(get_seat_index $x $y)] \#
-                end
+        for index in (builtin_seq 1 1 (count $seats))
+            # Get the current seat
+            set -l seat $seats[$index]
+            # Shortcut if it's floor, because floor never changes
+            test $seat = .; and continue
+            # Calculate the number of adjacent seats
+            # Yes, string match and count here appears to be faster than
+            # counting within the function and returning the count.
+            set -l v seat_$index
+            set -l full_adj (count (string match \# (string sub $seats[$$v])))
+            # Finally, transform the seat based on the data we collected.
+            if test $seat = \# -a $full_adj -ge 4
+                # Crammed seat becomes empty
+                set next_seats[$index] L
+            else if test $seat = L -a $full_adj -eq 0
+                # Spacious seat fills
+                set next_seats[$index] \#
             end
         end
 
