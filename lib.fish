@@ -1,3 +1,5 @@
+set -g debug_prints false
+
 # Optionally load a different input file from first program argument.
 set input_file (string sub $argv[1] input.txt)[1]
 
@@ -76,5 +78,23 @@ function vector_math
 
     for i in (builtin_seq 1 1 $count)
         math "$in1[$i] $operation $in2[$i]"
+    end
+end
+
+function se
+    $debug_prints; and echo $argv >&2
+end
+
+function vse -S
+    if $debug_prints
+        set -l first true
+        for v in $argv
+            if not $first
+                se -n ", "
+            end
+            se -n "$v: $$v"
+            set first false
+        end
+        se
     end
 end
